@@ -1,22 +1,88 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  </head>
+
+<head>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
+
+  <!-- We need A-Frame Extras to run animations -->
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
+
+
+  <meta charset="utf-8" />
+  <title>Zappar for A-Frame: Play Animation From Gaze Example</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+
+  <script>
+
+    // Only show our content when the image becomes visible
+    AFRAME.registerComponent("visibility-changer", {
+      init: function () {
+        this.el.setAttribute("visible", false)
+        this.el.sceneEl.addEventListener('zappar-visible', () => this.el.setAttribute("visible", true));
+      }
+    })
+
+    // Register a component that will register an event listener for when our raycaster detects an object
+    AFRAME.registerComponent('collider-check', {
+      dependencies: ['raycaster'],
+      init: function () {
+        this.el.addEventListener('raycaster-intersection', function () {
+          // When the object is detected, play the animation
+          const model = document.getElementById('model');
+          model.setAttribute("animation-mixer", "clip:null")
+          model.setAttribute("animation-mixer", "clip: Armature|mixamo.com|Layer0; repetitions : 1");
+        });
+      }
+    });
+  </script>
+</head>
+
+<body>
+
   <body>
-    <a-scene mindar-image="imageTargetSrc: https://s3upload-taolyluonng.s3.ap-southeast-2.amazonaws.com/logo3.mind; filterMinCF:0.0005; filterBeta: 0.005;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-assets>	
-	<a-asset-item id="avatarModel" src="https://s3upload-taolyluonng.s3.ap-southeast-2.amazonaws.com/testmindar2.glb"></a-asset-item>
-      </a-assets>
+    <a-scene>
+      <!-- Ask user for camera permissions, display some text if permission is denied -->
+      <a-entity zappar-permissions-ui id="permissions"></a-entity>
+      <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
+      <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera zappar-camera>
+        <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
+        <!-- Use our 'collider-check' component to register the event handler -->
+        <a-entity collider-check raycaster="objects: .collidable"></a-entity>
+      </a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        
-        <!--<a-gltf-model rotation="0 0 0 " position="0 -0.5 0.1" scale="1.5 1.5 1.5" src="#avatarModel"/>-->
-	<a-gltf-model rotation="90 0 0 " position="0 0 0" scale="1.5 1.5 1.5" src="#avatarModel"/>
+      <a-entity zappar-image="target: url(https://s3upload-taolyluonng.s3.ap-southeast-2.amazonaws.com/logo4.zpt)">
+
+        <!-- Have a group that will only become visible when the target image comes into view-->
+        <a-entity visibility-changer>
+
+          <!-- Have a hotspot plane that can be detected by the raycaster -->
+          <!-- <a-plane class="collidable" color="#000000" material="transparent: true; opacity: 0.8;" width="1" height="1"
+            position="0 0 -0.01 "></a-plane> -->
+
+          <!-- Include our 3D model-->
+          <a-entity rotation="90 0 0" scale="1.5 1.5 1.5" id="model"
+            gltf-model="url(https://s3upload-taolyluonng.s3.ap-southeast-2.amazonaws.com/testmindar2.glb)"
+            animation-mixer="clip: null"></a-entity>
+
+        </a-entity>
+
       </a-entity>
+
+
     </a-scene>
   </body>
+
+</body>
+
 </html>
